@@ -49,4 +49,29 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.CONFLICT)
                 .body(response);
     }
+
+    @ExceptionHandler(NutritionGoalAlreadyExistsException.class)
+    public ResponseEntity<Map<String, Object>> handleNutritionGoalAlreadyExists(
+            NutritionGoalAlreadyExistsException exception) {
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("status", HttpStatus.CONFLICT.value());
+        response.put("message", exception.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(response);
+    }
+    @ExceptionHandler(UserProfileNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleUserProfileNotFound(
+            UserProfileNotFoundException exception) {
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("status", HttpStatus.NOT_FOUND.value());
+        response.put("message", exception.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(response);
+    }
 }
