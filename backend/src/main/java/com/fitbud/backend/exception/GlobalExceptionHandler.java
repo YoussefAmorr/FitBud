@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import com.fitbud.backend.exception.FoodNotFoundException;
 import com.fitbud.backend.exception.FoodLogNotFoundException;
+import com.fitbud.backend.exception.NutritionGoalNotFoundException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -90,6 +91,18 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(FoodLogNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleFoodLogNotFound(
             FoodLogNotFoundException exception) {
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("status", HttpStatus.NOT_FOUND.value());
+        response.put("message", exception.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(response);
+    }
+    @ExceptionHandler(NutritionGoalNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleNutritionGoalNotFound(
+            NutritionGoalNotFoundException exception) {
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("status", HttpStatus.NOT_FOUND.value());
