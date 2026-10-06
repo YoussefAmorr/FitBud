@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import com.fitbud.backend.exception.FoodNotFoundException;
 import com.fitbud.backend.exception.FoodLogNotFoundException;
 import com.fitbud.backend.exception.NutritionGoalNotFoundException;
+import com.fitbud.backend.exception.DuplicateEmailException;
+import com.fitbud.backend.exception.InvalidCredentialsException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -112,4 +114,17 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.NOT_FOUND)
                 .body(response);
     }
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidCredentials(
+            InvalidCredentialsException exception) {
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("status", HttpStatus.UNAUTHORIZED.value());
+        response.put("message", exception.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(response);
+    }
+
 }
