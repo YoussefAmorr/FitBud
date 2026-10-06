@@ -1,6 +1,8 @@
 package com.fitbud.backend.service;
 
 import com.fitbud.backend.dto.DailyNutritionSummaryResponse;
+import com.fitbud.backend.exception.NutritionGoalNotFoundException;
+import com.fitbud.backend.exception.UserProfileNotFoundException;
 import com.fitbud.backend.model.Food;
 import com.fitbud.backend.model.FoodLog;
 import com.fitbud.backend.model.NutritionGoal;
@@ -8,8 +10,7 @@ import com.fitbud.backend.repository.FoodLogRepository;
 import com.fitbud.backend.repository.NutritionGoalRepository;
 import com.fitbud.backend.repository.UserProfileRepository;
 import org.springframework.stereotype.Service;
-import com.fitbud.backend.exception.UserProfileNotFoundException;
-import com.fitbud.backend.exception.NutritionGoalNotFoundException;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -30,11 +31,19 @@ public class NutritionSummaryService {
         this.nutritionGoalRepository = nutritionGoalRepository;
         this.userProfileRepository = userProfileRepository;
     }
+
     public DailyNutritionSummaryResponse getDailySummary(
             Long userProfileId,
+            String authenticatedEmail,
             LocalDate date) {
 
-        if (!userProfileRepository.existsById(userProfileId)) {
+        if (userProfileRepository
+                .findByIdAndUserAccountEmail(
+                        userProfileId,
+                        authenticatedEmail
+                )
+                .isEmpty()) {
+
             throw new UserProfileNotFoundException(
                     "User profile not found with id: " + userProfileId
             );
@@ -66,7 +75,8 @@ public class NutritionSummaryService {
             Food food = foodLog.getFood();
 
             double servingMultiplier =
-                    foodLog.getQuantityGrams() / food.getServingSizeGrams();
+                    foodLog.getQuantityGrams()
+                            / food.getServingSizeGrams();
 
             caloriesConsumed +=
                     food.getCalories() * servingMultiplier;
@@ -95,7 +105,8 @@ public class NutritionSummaryService {
 
                 carbohydrateConsumed,
                 nutritionGoal.getCarbohydrateTargetGrams(),
-                nutritionGoal.getCarbohydrateTargetGrams() - carbohydrateConsumed,
+                nutritionGoal.getCarbohydrateTargetGrams()
+                        - carbohydrateConsumed,
 
                 fatConsumed,
                 nutritionGoal.getFatTargetGrams(),

@@ -25,13 +25,17 @@ public class NutritionGoalService {
 
     public NutritionGoal createNutritionGoal(
             Long userProfileId,
+            String authenticatedEmail,
             Integer calorieTarget,
             Integer proteinTargetGrams,
             Integer carbohydrateTargetGrams,
             Integer fatTargetGrams) {
 
         UserProfile userProfile = userProfileRepository
-                .findById(userProfileId)
+                .findByIdAndUserAccountEmail(
+                        userProfileId,
+                        authenticatedEmail
+                )
                 .orElseThrow(() ->
                         new UserProfileNotFoundException(
                                 "User profile not found with id: " + userProfileId
@@ -56,7 +60,18 @@ public class NutritionGoalService {
     }
 
     public Optional<NutritionGoal> getNutritionGoalByUserProfileId(
-            Long userProfileId) {
+            Long userProfileId,
+            String authenticatedEmail) {
+
+        if (userProfileRepository
+                .findByIdAndUserAccountEmail(
+                        userProfileId,
+                        authenticatedEmail
+                )
+                .isEmpty()) {
+
+            return Optional.empty();
+        }
 
         return nutritionGoalRepository.findByUserProfileId(userProfileId);
     }

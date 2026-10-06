@@ -1,5 +1,8 @@
 package com.fitbud.backend.service;
 
+import com.fitbud.backend.exception.FoodLogNotFoundException;
+import com.fitbud.backend.exception.FoodNotFoundException;
+import com.fitbud.backend.exception.UserProfileNotFoundException;
 import com.fitbud.backend.model.Food;
 import com.fitbud.backend.model.FoodLog;
 import com.fitbud.backend.model.MealType;
@@ -7,10 +10,8 @@ import com.fitbud.backend.model.UserProfile;
 import com.fitbud.backend.repository.FoodLogRepository;
 import com.fitbud.backend.repository.FoodRepository;
 import com.fitbud.backend.repository.UserProfileRepository;
-import com.fitbud.backend.exception.FoodNotFoundException;
-import com.fitbud.backend.exception.UserProfileNotFoundException;
 import org.springframework.stereotype.Service;
-import com.fitbud.backend.exception.FoodLogNotFoundException;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -34,16 +35,16 @@ public class FoodLogService {
 
     public FoodLog createFoodLog(
             Long userProfileId,
+            String authenticatedEmail,
             Long foodId,
             MealType mealType,
             Double quantityGrams,
             LocalDateTime eatenAt) {
 
-        UserProfile userProfile = userProfileRepository
-                .findById(userProfileId)
-                .orElseThrow(() -> new UserProfileNotFoundException(
-                        "User profile not found with id: " + userProfileId
-                ));
+        UserProfile userProfile = getOwnedUserProfile(
+                userProfileId,
+                authenticatedEmail
+        );
 
         Food food = foodRepository
                 .findById(foodId)
@@ -62,9 +63,14 @@ public class FoodLogService {
         return foodLogRepository.save(foodLog);
     }
 
-    public List<FoodLog> getFoodLogsByUser(Long userProfileId) {
+    public List<FoodLog> getFoodLogsByUser(
+            Long userProfileId,
+            String authenticatedEmail) {
 
-        ensureUserProfileExists(userProfileId);
+        ensureUserOwnsProfile(
+                userProfileId,
+                authenticatedEmail
+        );
 
         return foodLogRepository
                 .findByUserProfileIdOrderByEatenAtDesc(userProfileId);
@@ -72,9 +78,13 @@ public class FoodLogService {
 
     public List<FoodLog> getFoodLogsByUserAndDate(
             Long userProfileId,
+            String authenticatedEmail,
             LocalDate date) {
 
-        ensureUserProfileExists(userProfileId);
+        ensureUserOwnsProfile(
+                userProfileId,
+                authenticatedEmail
+        );
 
         LocalDateTime startOfDay = date.atStartOfDay();
         LocalDateTime startOfNextDay = date.plusDays(1).atStartOfDay();
@@ -87,7 +97,15 @@ public class FoodLogService {
                 );
     }
 
-    public void deleteFoodLog(Long userProfileId, Long logId) {
+    public void deleteFoodLog(
+            Long userProfileId,
+            String authenticatedEmail,
+            Long logId) {
+
+        ensureUserOwnsProfile(
+                userProfileId,
+                authenticatedEmail
+        );
 
         FoodLog foodLog = foodLogRepository
                 .findByIdAndUserProfileId(logId, userProfileId)
@@ -98,11 +116,28 @@ public class FoodLogService {
 
         foodLogRepository.delete(foodLog);
     }
-    private void ensureUserProfileExists(Long userProfileId) {
-        if (!userProfileRepository.existsById(userProfileId)) {
-            throw new UserProfileNotFoundException(
-                    "User profile not found with id: " + userProfileId
-            );
-        }
+
+    private UserProfile getOwnedUserProfile(
+            Long userProfileId,
+            String authenticatedEmail) {
+
+        return userProfileRepository
+                .findByIdAndUserAccountEmail(
+                        userProfileId,
+                        authenticatedEmail
+                )
+                .orElseThrow(() -> new UserProfileNotFoundException(
+                        "User profile not found with id: " + userProfileId
+                ));
+    }
+
+    private void ensureUserOwnsProfile(
+            Long userProfileId,
+            String authenticatedEmail) {
+
+        getOwnedUserProfile(
+                userProfileId,
+                authenticatedEmail
+        );
     }
 }

@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -26,10 +27,12 @@ public class FoodLogController {
     @PostMapping
     public ResponseEntity<FoodLogResponse> createFoodLog(
             @PathVariable Long profileId,
-            @Valid @RequestBody CreateFoodLogRequest request) {
+            @Valid @RequestBody CreateFoodLogRequest request,
+            Principal principal) {
 
         FoodLog foodLog = foodLogService.createFoodLog(
                 profileId,
+                principal.getName(),
                 request.foodId(),
                 request.mealType(),
                 request.quantityGrams(),
@@ -44,17 +47,22 @@ public class FoodLogController {
     @GetMapping
     public ResponseEntity<List<FoodLogResponse>> getFoodLogs(
             @PathVariable Long profileId,
-            @RequestParam(required = false) LocalDate date) {
+            @RequestParam(required = false) LocalDate date,
+            Principal principal) {
 
         List<FoodLog> foodLogs;
 
         if (date != null) {
             foodLogs = foodLogService.getFoodLogsByUserAndDate(
                     profileId,
+                    principal.getName(),
                     date
             );
         } else {
-            foodLogs = foodLogService.getFoodLogsByUser(profileId);
+            foodLogs = foodLogService.getFoodLogsByUser(
+                    profileId,
+                    principal.getName()
+            );
         }
 
         List<FoodLogResponse> response = foodLogs
@@ -68,9 +76,14 @@ public class FoodLogController {
     @DeleteMapping("/{logId}")
     public ResponseEntity<Void> deleteFoodLog(
             @PathVariable Long profileId,
-            @PathVariable Long logId) {
+            @PathVariable Long logId,
+            Principal principal) {
 
-        foodLogService.deleteFoodLog(profileId, logId);
+        foodLogService.deleteFoodLog(
+                profileId,
+                principal.getName(),
+                logId
+        );
 
         return ResponseEntity.noContent().build();
     }

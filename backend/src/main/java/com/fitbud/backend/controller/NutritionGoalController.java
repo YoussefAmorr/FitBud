@@ -8,7 +8,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import java.security.Principal;
 @RestController
 @RequestMapping("/api/profiles/{profileId}/nutrition-goals")
 public class NutritionGoalController {
@@ -23,11 +23,13 @@ public class NutritionGoalController {
     @PostMapping
     public ResponseEntity<NutritionGoalResponse> createNutritionGoal(
             @PathVariable Long profileId,
-            @Valid @RequestBody CreateNutritionGoalRequest request) {
+            @Valid @RequestBody CreateNutritionGoalRequest request,
+            Principal principal) {
 
         NutritionGoal nutritionGoal =
                 nutritionGoalService.createNutritionGoal(
                         profileId,
+                        principal.getName(),
                         request.calorieTarget(),
                         request.proteinTargetGrams(),
                         request.carbohydrateTargetGrams(),
@@ -41,10 +43,14 @@ public class NutritionGoalController {
 
     @GetMapping
     public ResponseEntity<NutritionGoalResponse> getNutritionGoal(
-            @PathVariable Long profileId) {
+            @PathVariable Long profileId,
+            Principal principal) {
 
         return nutritionGoalService
-                .getNutritionGoalByUserProfileId(profileId)
+                .getNutritionGoalByUserProfileId(
+                        profileId,
+                        principal.getName()
+                )
                 .map(this::toResponse)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());

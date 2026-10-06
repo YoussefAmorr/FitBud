@@ -5,6 +5,7 @@ import com.fitbud.backend.service.NutritionSummaryService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.time.LocalDate;
 
 @RestController
@@ -21,11 +22,13 @@ public class NutritionSummaryController {
     @GetMapping
     public ResponseEntity<DailyNutritionSummaryResponse> getDailySummary(
             @PathVariable Long profileId,
-            @RequestParam LocalDate date) {
+            @RequestParam LocalDate date,
+            Principal principal) {
 
         DailyNutritionSummaryResponse summary =
                 nutritionSummaryService.getDailySummary(
                         profileId,
+                        principal.getName(),
                         date
                 );
 

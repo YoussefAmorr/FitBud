@@ -126,5 +126,29 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.UNAUTHORIZED)
                 .body(response);
     }
+    @ExceptionHandler(UserAccountNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleUserAccountNotFound(
+            UserAccountNotFoundException exception) {
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("status", HttpStatus.NOT_FOUND.value());
+        response.put("message", exception.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(response);
+    }
+    @ExceptionHandler(UserProfileAlreadyExistsException.class)
+    public ResponseEntity<Map<String, Object>> handleUserProfileAlreadyExists(
+            UserProfileAlreadyExistsException exception) {
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("status", HttpStatus.CONFLICT.value());
+        response.put("message", exception.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(response);
+    }
 
 }

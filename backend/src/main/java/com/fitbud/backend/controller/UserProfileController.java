@@ -8,8 +8,9 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.security.Principal;
 
-import java.util.List;
+
 
 @RestController
 @RequestMapping("/api/profiles")
@@ -23,7 +24,8 @@ public class UserProfileController {
 
     @PostMapping
     public ResponseEntity<UserProfileResponse> createProfile(
-            @Valid @RequestBody CreateUserProfileRequest request) {
+            @Valid @RequestBody CreateUserProfileRequest request,
+            Principal principal) {
 
         UserProfile userProfile = new UserProfile(
                 request.firstName(),
@@ -34,14 +36,28 @@ public class UserProfileController {
         );
 
         UserProfile createdProfile =
-                userProfileService.createProfile(userProfile);
+                userProfileService.createProfile(
+                        userProfile,
+                        principal.getName()
+                );
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(toResponse(createdProfile));
     }
 
-    @GetMapping
+    @GetMapping("/me")
+    public ResponseEntity<UserProfileResponse> getMyProfile(
+            Principal principal) {
+
+        return userProfileService
+                .getProfileByAccountEmail(principal.getName())
+                .map(this::toResponse)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+   /* @GetMapping
     public ResponseEntity<List<UserProfileResponse>> getAllProfiles() {
 
         List<UserProfileResponse> profiles =
@@ -51,14 +67,18 @@ public class UserProfileController {
                         .toList();
 
         return ResponseEntity.ok(profiles);
-    }
+    }*/
 
     @GetMapping("/{id}")
     public ResponseEntity<UserProfileResponse> getProfileById(
-            @PathVariable Long id) {
+            @PathVariable Long id,
+            Principal principal) {
 
         return userProfileService
-                .getProfileById(id)
+                .getProfileByIdAndAccountEmail(
+                        id,
+                        principal.getName()
+                )
                 .map(this::toResponse)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());

@@ -1,5 +1,6 @@
 package com.fitbud.backend.service;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -39,5 +40,30 @@ public class JwtService {
                 .expiration(expiration)
                 .signWith(secretKey)
                 .compact();
+    }
+
+    public String extractEmail(String token) {
+        return extractClaims(token).getSubject();
+    }
+
+    public boolean isTokenValid(String token) {
+        try {
+            Claims claims = extractClaims(token);
+
+            return claims.getSubject() != null
+                    && claims.getExpiration() != null
+                    && claims.getExpiration().after(new Date());
+
+        } catch (Exception exception) {
+            return false;
+        }
+    }
+
+    private Claims extractClaims(String token) {
+        return Jwts.parser()
+                .verifyWith(secretKey)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
     }
 }
