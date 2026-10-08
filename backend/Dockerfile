@@ -19,7 +19,12 @@ FROM eclipse-temurin:21-jre
 
 WORKDIR /app
 
-COPY --from=build /app/target/*.jar app.jar
+RUN groupadd --system fitbud && \
+    useradd --system --gid fitbud --home-dir /app fitbud
+
+COPY --from=build --chown=fitbud:fitbud /app/target/*.jar app.jar
+
+USER fitbud
 
 EXPOSE 8080
 
