@@ -21,6 +21,28 @@ services:
       timeout: 5s
       retries: 5
 
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+
+    container_name: fitbud-backend
+    restart: unless-stopped
+
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/fitbud
+      SPRING_DATASOURCE_USERNAME: fitbud
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      FITBUD_JWT_SECRET: ${FITBUD_JWT_SECRET}
+      USDA_API_KEY: ${USDA_API_KEY}
+
+    ports:
+      - "8080:8080"
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
   fitbud-postgres-data:
     name: infrastructure_fitbud-postgres-data
