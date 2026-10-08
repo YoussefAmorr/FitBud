@@ -1,0 +1,26 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: fitbud-postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: fitbud
+      POSTGRES_USER: fitbud
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - fitbud-postgres-data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fitbud -d fitbud"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  fitbud-postgres-data:
+    name: infrastructure_fitbud-postgres-data
