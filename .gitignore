@@ -59,6 +59,7 @@ coverage/
 ### Local database backups ###
 backups/
 *.sql
+!backend/src/main/resources/db/migration/*.sql
 *.dump
 *.backup
 
