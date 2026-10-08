@@ -66,33 +66,54 @@ The project was built as a production-oriented full-stack application using Reac
 
 ## Architecture
 
-FitBud follows a three-tier architecture:
+FitBud uses a three-tier architecture with a React frontend, a Spring Boot REST API, and a PostgreSQL database. Docker Compose orchestrates the application locally, while GitHub Actions automates testing and build verification.
 
-```text
-┌─────────────────────────────┐
-│       React Frontend        │
-│    TypeScript + Vite        │
-│       Nginx Container       │
-└──────────────┬──────────────┘
-               │
-               │ REST / JSON
-               ▼
-┌─────────────────────────────┐
-│    Spring Boot REST API     │
-│ Java 21 + Spring Security   │
-│      JWT Authentication     │
-└──────────────┬──────────────┘
-               │
-       ┌───────┴────────┐
-       │                │
-       ▼                ▼
-┌──────────────┐  ┌─────────────────────┐
-│ PostgreSQL   │  │ USDA FoodData       │
-│ Database     │  │ Central API         │
-└──────────────┘  └─────────────────────┘
+```mermaid
+flowchart TB
+    User["User / Web Browser"]
+
+    subgraph Docker["Docker Compose — Local Application"]
+        direction TB
+
+        Frontend["React + TypeScript<br/>Vite Build / Nginx"]
+
+        Backend["Spring Boot REST API<br/>Java 21 / Spring Security / JWT"]
+
+        Database[("PostgreSQL 17<br/>Application Database")]
+
+        Flyway["Flyway<br/>Schema Migrations"]
+
+        Frontend -->|"REST / JSON"| Backend
+        Backend -->|"Spring Data JPA"| Database
+        Flyway -.->|"Schema Management"| Database
+    end
+
+    USDA["USDA FoodData Central API"]
+
+    User -->|"HTTP"| Frontend
+    Backend -->|"HTTPS / Food Search"| USDA
+
+    subgraph DevOps["Development & DevOps"]
+        GitHub["GitHub Repository"]
+        Actions["GitHub Actions CI<br/>Backend Tests / Frontend Build"]
+        ECR["Amazon ECR<br/>ARM64 Backend Image"]
+    end
+
+    GitHub -->|"Push / Pull Request"| Actions
+    GitHub -.->|"Source for Docker Build"| ECR
 ```
 
-Docker Compose orchestrates the frontend, backend, and PostgreSQL containers for local production-style execution.
+### Infrastructure and Deployment
+
+- **Frontend:** React and TypeScript are compiled with Vite and served by Nginx.
+- **Backend:** Spring Boot provides REST endpoints secured with JWT authentication.
+- **Database:** PostgreSQL persists application data, with Flyway managing schema migrations.
+- **External integration:** The backend communicates with USDA FoodData Central to retrieve food information.
+- **Local infrastructure:** Docker Compose runs the frontend, backend, and database as separate containers.
+- **Continuous integration:** GitHub Actions automatically executes backend tests, frontend linting, and production builds.
+- **Container registry:** The ARM64 backend Docker image has been published to Amazon ECR.
+
+**Deployment status:** FitBud runs locally through Docker Compose. Its backend image is published to Amazon ECR, but the application is not publicly deployed to AWS.
 
 ## Security
 
