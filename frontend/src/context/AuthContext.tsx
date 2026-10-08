@@ -1,5 +1,4 @@
 import {
-    useEffect,
     useState,
     type ReactNode,
 } from 'react'
@@ -19,14 +18,6 @@ export function AuthProvider({
         () => localStorage.getItem('fitbud_token'),
     )
 
-    useEffect(() => {
-        if (token) {
-            localStorage.setItem('fitbud_token', token)
-        } else {
-            localStorage.removeItem('fitbud_token')
-        }
-    }, [token])
-
     async function login(
         email: string,
         password: string,
@@ -44,6 +35,7 @@ export function AuthProvider({
                 },
             )
 
+        localStorage.setItem('fitbud_token', response.token)
         setToken(response.token)
     }
 
@@ -65,6 +57,7 @@ export function AuthProvider({
     }
 
     function logout() {
+        localStorage.removeItem('fitbud_token')
         setToken(null)
     }
 

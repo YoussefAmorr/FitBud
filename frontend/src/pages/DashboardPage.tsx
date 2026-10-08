@@ -16,20 +16,14 @@ function DashboardPage() {
 
     useEffect(() => {
         async function loadDashboard() {
+            let userProfile: UserProfile
+
+            // First determine whether the authenticated user has a profile.
             try {
-                const userProfile =
+                userProfile =
                     await apiRequest<UserProfile>('/api/profiles/me')
 
                 setProfile(userProfile)
-
-                const today = new Date().toLocaleDateString('en-CA')
-
-                const dailySummary =
-                    await apiRequest<NutritionSummary>(
-                        `/api/profiles/${userProfile.id}/nutrition-summary?date=${today}`,
-                    )
-
-                setSummary(dailySummary)
             } catch (err) {
                 if (err instanceof ApiError && err.status === 404) {
                     navigate('/profile/setup', { replace: true })
@@ -39,8 +33,32 @@ function DashboardPage() {
                 setError(
                     err instanceof Error
                         ? err.message
-                        : 'Unable to load your dashboard.',
+                        : 'Unable to load your profile.',
                 )
+
+                setLoading(false)
+                return
+            }
+
+            // Once the profile exists, load today's nutrition summary.
+            try {
+                const today = new Date().toLocaleDateString('en-CA')
+
+                const dailySummary =
+                    await apiRequest<NutritionSummary>(
+                        `/api/profiles/${userProfile.id}/nutrition-summary?date=${today}`,
+                    )
+
+                setSummary(dailySummary)
+            } catch (err) {
+                // A missing nutrition summary does NOT mean the profile is missing.
+                if (!(err instanceof ApiError && err.status === 404)) {
+                    setError(
+                        err instanceof Error
+                            ? err.message
+                            : 'Unable to load your nutrition summary.',
+                    )
+                }
             } finally {
                 setLoading(false)
             }
@@ -148,7 +166,7 @@ function DashboardPage() {
                     </div>
                 ) : (
                     <p className="muted">
-                        No nutrition summary is available.
+                        No nutrition summary is available for today.
                     </p>
                 )}
             </section>

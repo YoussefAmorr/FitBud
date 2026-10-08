@@ -1,6 +1,6 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { apiRequest } from '../api/api'
+import { ApiError, apiRequest } from '../api/api'
 import type {
     CreateUserProfileRequest,
     UserProfile,
@@ -17,6 +17,34 @@ function ProfileSetupPage() {
 
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
+    const [checkingProfile, setCheckingProfile] = useState(true)
+
+    useEffect(() => {
+        async function checkExistingProfile() {
+            try {
+                await apiRequest<UserProfile>('/api/profiles/me')
+
+                // Profile already exists, so setup is not needed.
+                navigate('/dashboard', { replace: true })
+            } catch (err) {
+                if (err instanceof ApiError && err.status === 404) {
+                    // The authenticated user does not have a profile yet.
+                    setCheckingProfile(false)
+                    return
+                }
+
+                setError(
+                    err instanceof Error
+                        ? err.message
+                        : 'Unable to check your profile.',
+                )
+
+                setCheckingProfile(false)
+            }
+        }
+
+        void checkExistingProfile()
+    }, [navigate])
 
     async function handleSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault()
@@ -38,7 +66,7 @@ function ProfileSetupPage() {
                 body: JSON.stringify(request),
             })
 
-            navigate('/dashboard')
+            navigate('/dashboard', { replace: true })
         } catch (err) {
             setError(
                 err instanceof Error
@@ -48,6 +76,17 @@ function ProfileSetupPage() {
         } finally {
             setLoading(false)
         }
+    }
+
+    if (checkingProfile) {
+        return (
+            <div className="profile-setup-page">
+                <section className="profile-setup-card">
+                    <div className="auth-logo">FitBud</div>
+                    <p className="muted">Loading your profile...</p>
+                </section>
+            </div>
+        )
     }
 
     return (

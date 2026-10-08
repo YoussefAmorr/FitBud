@@ -26,7 +26,7 @@ function RegisterPage() {
         try {
             await register(email, password)
             await login(email, password)
-            navigate('/dashboard')
+            navigate('/profile/setup', { replace: true })
         } catch (err) {
             setError(
                 err instanceof Error ? err.message : 'Unable to create account.',
